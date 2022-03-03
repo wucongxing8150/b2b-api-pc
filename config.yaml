@@ -1,0 +1,16 @@
+# 框架备注
+port: 9500
+
+# 环境配置
+env: dev
+
+#数据库
+mysql:
+  host: 'localhost'
+  username: root
+  password: 'Wucongxing1..'
+  port: 3306
+  db-name: oms
+  max-idle-cons: 5
+  max-open-cons: 20
+  debug: true
