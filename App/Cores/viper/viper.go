@@ -5,10 +5,6 @@
 package viper
 
 import (
-	"fmt"
-
-	"b2b-api-pc/App/Config"
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -29,17 +25,17 @@ func Init() {
 		}
 	}
 
-	// 将读取的配置信息保存至全局变量Conf
-	if err := viper.Unmarshal(&Config.C); err != nil {
-		panic(fmt.Errorf("解析配置文件失败, err:%s \n", err))
-	}
-
-	// 注意！！！配置文件发生变化后要同步到全局变量Conf
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		if err := viper.Unmarshal(&Config.C); err != nil {
-			panic(fmt.Errorf("解析配置文件失败, err:%s \n", err))
-		}
-	})
+	// // 将读取的配置信息保存至全局变量Conf
+	// if err := viper.Unmarshal(&Config.C); err != nil {
+	// 	panic(fmt.Errorf("解析配置文件失败, err:%s \n", err))
+	// }
+	//
+	// // 注意！！！配置文件发生变化后要同步到全局变量Conf
+	// viper.OnConfigChange(func(in fsnotify.Event) {
+	// 	if err := viper.Unmarshal(&Config.C); err != nil {
+	// 		panic(fmt.Errorf("解析配置文件失败, err:%s \n", err))
+	// 	}
+	// })
 
 	// 自动监听配置修改
 	viper.WatchConfig()

@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"b2b-api-pc/App/Api/Controller/Invoice"
 	"b2b-api-pc/App/Api/Middlewares/Auth"
 	"b2b-api-pc/App/Api/Middlewares/Corss"
+	"b2b-api-pc/App/Api/Middlewares/Recover"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,11 +31,23 @@ func Init() *gin.Engine {
 		})
 	})
 
+	// 处理异常
+	r.Use(Recover.Recover())
+
 	// 跨域中间件
 	r.Use(Corss.Cors())
 
 	// 鉴权中间件
 	r.Use(Auth.VerifyAuth())
+
+	// 路由群组
+	invoice := r.Group("/invoice")
+
+	postGroup := invoice.Group("/post")
+	{
+		// 邮寄地址列表
+		postGroup.GET("address", Invoice.List)
+	}
 
 	return r
 }

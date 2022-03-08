@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"b2b-api-pc/App/Api/Router"
-	"b2b-api-pc/App/Config"
 	"b2b-api-pc/App/Cores"
+	"github.com/spf13/viper"
 )
 
 func main() {
@@ -16,7 +16,7 @@ func main() {
 	// 加载核心
 	Cores.Init()
 
-	if err := r.Run(":" + strconv.Itoa(Config.C.Port)); err != nil {
+	if err := r.Run(":" + strconv.Itoa(viper.GetInt("port"))); err != nil {
 		fmt.Println("启动失败:%v\n", err)
 	}
 

@@ -10,7 +10,10 @@ mysql:
   username: root
   password: 'Wucongxing1..'
   port: 3306
-  db-name: oms
+  db-name: test
   max-idle-cons: 5
   max-open-cons: 20
   debug: true
+
+#b2b请求地址
+b2b-pc-path: "http://39.105.190.228:8112/p/user/userInfo"

@@ -4,18 +4,6 @@
 
 package Config
 
-var (
-	C Server
-)
-
-// Server
-// @Description: 配置数据
-type Server struct {
-	Port  int    `json:"port"`
-	Env   string `json:"env"`
-	Mysql Mysql
-}
-
 func init() {
 
 }

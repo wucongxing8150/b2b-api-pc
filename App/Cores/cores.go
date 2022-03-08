@@ -6,7 +6,7 @@ import (
 )
 
 func Init() {
-	// 初始化Viper 加载配置 读取如缓存中
+	// 初始化Viper 加载配置
 	viper.Init()
 
 	// 初始化数据库连接
