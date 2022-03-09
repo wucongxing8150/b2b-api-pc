@@ -46,7 +46,10 @@ func Init() *gin.Engine {
 	postGroup := invoice.Group("/post")
 	{
 		// 邮寄地址列表
-		postGroup.GET("address", Invoice.List)
+		postGroup.GET("address", Invoice.ListAddr)
+
+		// 修改邮寄地址
+		postGroup.PUT("address", Invoice.UpdateAddr)
 	}
 
 	return r
