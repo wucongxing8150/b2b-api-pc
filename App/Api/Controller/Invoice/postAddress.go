@@ -2,26 +2,12 @@
 package Invoice
 
 import (
+	Response "b2b-api-pc/App/Api/response"
+	InvoiceAddrModel "b2b-api-pc/App/Logic/InvoiceAddr"
+	"b2b-api-pc/App/Model"
 	"fmt"
 	"github.com/gin-gonic/gin"
-
-	Response "b2b-api-pc/App/Api/response"
-	InvoiceAddrModel "b2b-api-pc/App/Model/InvoiceAddr"
 )
-
-type InvoiceAddr struct {
-	InvoiceAddrID  int    `json:"invoice_addr_id" form:"invoice_addr_id" binding:"required"`
-	ReceiverName   string `json:"receiver_name"`
-	ReceiverMobile int    `json:"receiver_mobile"`
-	ProvinceID     int    `json:"province_id"`
-	Province       string `json:"province"`
-	AreaID         int    `json:"area_id"`
-	Area           string `json:"area"`
-	CityID         int    `json:"city_id"`
-	City           string `json:"city"`
-	Addr           string `json:"addr"`
-	PostCode       string `json:"post_code"`
-}
 
 // ListAddr List
 // @Description: 邮寄地址列表
@@ -55,10 +41,38 @@ func UpdateAddr(c *gin.Context) {
 		return
 	}
 
-	var invoiceAddr InvoiceAddr
-	if err := c.ShouldBind(&invoiceAddr); err != nil {
+	var invoiceAddr Model.InvoiceAddr
+	if err := c.ShouldBindJSON(&invoiceAddr); err != nil {
 		Response.FailWithMessage(fmt.Sprint(err), c)
 		return
 	}
-	fmt.Println(invoiceAddr)
+
+	//参数验证
+	//validate := validator.New()
+	//
+	//var stringTest string = ""
+	//err = validate.Var(stringTest, "required")
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+
+	//获取邮寄地址是否存在
+	maps := make(map[string]interface{})
+	maps["invoice_addr_id"] = invoiceAddr.InvoiceAddrId
+	maps["user_id"] = userId
+	result := InvoiceAddrModel.Get(maps)
+	fmt.Println(result)
+	if len(result) <= 0 {
+		Response.FailWithMessage("用户数据错误", c)
+		return
+	}
+
+	//执行修改
+
+	res := InvoiceAddrModel.Edit(invoiceAddr)
+	if res == false {
+		Response.FailWithMessage("修改失败", c)
+		return
+	}
+	Response.Ok(c)
 }
