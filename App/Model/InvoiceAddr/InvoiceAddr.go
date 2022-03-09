@@ -1,14 +1,15 @@
-package Model
+package InvoiceAddr
 
 import (
 	"time"
 
 	"b2b-api-pc/App/Cores/mysql"
+	"b2b-api-pc/App/Tool"
+	"github.com/jinzhu/gorm"
 )
 
-var db = mysql.DB
-
 type InvoiceAddr struct {
+	// gorm.Model
 	InvoiceAddrId  int64     `gorm:"column:invoice_addr_id;primary_key;AUTO_INCREMENT" json:"invoice_addr_id"` // 主键id
 	ShopId         int64     `gorm:"column:shop_id" json:"shop_id"`                                            // 店铺id
 	UserId         string    `gorm:"column:user_id" json:"user_id"`                                            // 用户id
@@ -27,44 +28,51 @@ type InvoiceAddr struct {
 	UpdateTime     time.Time `gorm:"column:update_time" json:"update_time"`                                    // 修改时间
 }
 
-func (i InvoiceAddr) Get(maps interface{}) (invoiceAddr []InvoiceAddr) {
+func (m *InvoiceAddr) TableName() string {
+	return "tz_invoice_addr"
+}
 
-	db.First(&invoiceAddr)
+// func (i InvoiceAddr) Get(maps interface{}) (invoiceAddr []InvoiceAddr) {
+// 	mysql.Db.First(&invoiceAddr)
+// 	return
+// }
+func Get(maps interface{}) (table []InvoiceAddr) {
+	mysql.Db.Model(&InvoiceAddr{}).Where(maps).Find(&table)
 	return
 }
 func Search(maps interface{}) (table []InvoiceAddr) {
-	db.Model(&InvoiceAddr{}).Where(maps).Find(&table)
+	mysql.Db.Model(&InvoiceAddr{}).Where(maps).Find(&table)
 	return
 }
 func SearchPage(pageNum int, pageSize int, maps interface{}) (table []InvoiceAddr) {
-	db.Model(&InvoiceAddr{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
+	mysql.Db.Model(&InvoiceAddr{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
 	return
 }
 func GetTotal(maps interface{}) (count int) {
-	db.Model(&InvoiceAddr{}).Where(maps).Count(&count)
+	mysql.Db.Model(&InvoiceAddr{}).Where(maps).Count(&count)
 	return
 }
 func (i *InvoiceAddr) Add(Data map[string]interface{}) bool {
-	db.Model(&InvoiceAddr{}).Create(&i)
-	return !db.NewRecord(&i)
+	mysql.Db.Model(&InvoiceAddr{}).Create(&i)
+	return !mysql.Db.NewRecord(&i)
 }
 func EditId(id int, data interface{}) bool {
-	db.Model(&InvoiceAddr{}).Where("id = ?", id).Updates(data)
+	mysql.Db.Model(&InvoiceAddr{}).Where("id = ?", id).Updates(data)
 	return true
 }
 func EditMap(maps interface{}, data interface{}) bool {
-	db.Model(&InvoiceAddr{}).Where(maps).Updates(data)
+	mysql.Db.Model(&InvoiceAddr{}).Where(maps).Updates(data)
 	return true
 }
 
-// func (i *InvoiceAddr) BeforeCreate(scope *gorm.Scope) error {
-// 	ID, err := Tool.NewWorker(1)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	err = scope.SetColumn("InvoiceAddrId", ID.GetId())
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return nil
-// }
+func (i *InvoiceAddr) BeforeCreate(scope *gorm.Scope) error {
+	ID, err := Tool.NewWorker(1)
+	if err != nil {
+		panic(err)
+	}
+	err = scope.SetColumn("InvoiceAddrId", ID.GetId())
+	if err != nil {
+		panic(err)
+	}
+	return nil
+}

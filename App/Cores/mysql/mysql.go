@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var DB *gorm.DB
+var Db *gorm.DB
 
 type Mysql struct {
 	Host         string `mapstructure:"host" json:"host" yaml:"host"`                           // 服务器地址
@@ -37,20 +37,23 @@ func Init() *gorm.DB {
 	dns := fmt.Sprintf("%s:%s@(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local&timeout=%s", m.Username,
 		m.Password, m.Host, m.Port, m.DbName, "10s")
 
-	DB, err = gorm.Open("mysql", dns)
-
+	Db, err = gorm.Open("mysql", dns)
 	if err != nil {
 		fmt.Println(err.Error())
 		panic(err.Error())
 	}
 
+	// gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
+	// 	return "tz_" + defaultTableName
+	// }
+
 	// 连接数配置也可以写入配置，在此读取
-	DB.DB().SetMaxIdleConns(m.MaxIdleConns)
-	DB.DB().SetMaxOpenConns(m.MaxOpenConns)
+	Db.DB().SetMaxIdleConns(m.MaxIdleConns)
+	Db.DB().SetMaxOpenConns(m.MaxOpenConns)
 
 	// 调试模式
-	DB.LogMode(m.Debug)    // 打印sql
-	DB.SingularTable(true) // 全局禁用表名复数
+	Db.LogMode(m.Debug)    // 打印sql
+	Db.SingularTable(true) // 全局禁用表名复数
 	fmt.Println("初始化数据库成功......")
-	return DB
+	return Db
 }

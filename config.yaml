@@ -10,7 +10,7 @@ mysql:
   username: root
   password: 'Wucongxing1..'
   port: 3306
-  db-name: test
+  db-name: b2b-test
   max-idle-cons: 5
   max-open-cons: 20
   debug: true
