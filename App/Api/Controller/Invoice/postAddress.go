@@ -2,13 +2,17 @@
 package Invoice
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
 	InvoiceAddrModel "b2b-api-pc/App/Logic/InvoiceAddr"
 	"b2b-api-pc/App/Model"
 	"b2b-api-pc/App/Validator"
-	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/mitchellh/mapstructure"
 )
 
 // ListAddr List
@@ -100,7 +104,11 @@ func AddAddr(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(invoiceAddr)
+	// 参数验证
+	if err := Validator.Validate.Struct(invoiceAddr); err != nil {
+		Response.FailWithMessage(Validator.Translate(err), c)
+		return
+	}
 
 	if invoiceAddr.IsDefault == 1 {
 		for _, r := range result {
@@ -145,24 +153,100 @@ func AddAddr(c *gin.Context) {
 	data["city"] = invoiceAddr.City
 	data["addr"] = invoiceAddr.Addr
 	data["post_code"] = invoiceAddr.PostCode
+	data["create_time"] = time.Now()
+	data["update_time"] = time.Now()
 
-	if err := mysql.Db.Model(&InvoiceAddrModel.TableStruct{}).Create(data).Error; err != nil {
-		fmt.Println("插入失败", err)
+	// 转换结构体
+	err := mapstructure.Decode(data, &invoiceAddr)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 
-	// _, res := InvoiceAddrModel.Add(data)
-	// if res == false {
-	// 	Response.FailWithMessage("添加失败", c)
-	// 	return
-	// }
+	invoiceAddr.UserId = userId.(string)
 
-	// invoiceAddr.UserId = userId.(string)
+	_, res := InvoiceAddrModel.Add(invoiceAddr)
+	if res == false {
+		Response.FailWithMessage("添加失败", c)
+		return
+	}
+
+	Response.Ok(c)
+}
+
+// DeleteAddr
+// @Description:删除邮寄地址
+func DeleteAddr(c *gin.Context) {
+	userId, _ := c.Get("user_id")
+
+	if userId == "" {
+		Response.FailWithMessage("缺少参数", c)
+		return
+	}
+
+	InvoiceAddrId, res := c.GetQuery("invoice_addr_id")
+	if !res || InvoiceAddrId == "" {
+		Response.FailWithMessage("缺少参数", c)
+		return
+	}
+
+	// 验证数据是否存在
+	maps := make(map[string]interface{})
+	maps["user_id"] = userId
+	maps["invoice_addr_id"] = InvoiceAddrId
+
+	result := InvoiceAddrModel.Get(maps)
+	if len(result) <= 0 {
+		Response.FailWithMessage("非法数据", c)
+		return
+	}
+
 	//
-	// _, res := InvoiceAddrModel.Add(invoiceAddr)
-	// if res == false {
-	// 	Response.FailWithMessage("添加失败", c)
-	// 	return
-	// }
+	Id, _ := strconv.ParseInt(InvoiceAddrId, 10, 64)
+
+	_ = InvoiceAddrModel.DeleteId(Id)
+
+	Response.Ok(c)
+}
+
+// DefaultAddr
+// @Description:邮寄地址设为默认
+func DefaultAddr(c *gin.Context) {
+	userId, _ := c.Get("user_id")
+
+	if userId == "" {
+		Response.FailWithMessage("缺少参数", c)
+		return
+	}
+
+	InvoiceAddrId, res := c.GetQuery("invoice_addr_id")
+	if !res || InvoiceAddrId == "" {
+		Response.FailWithMessage("缺少参数", c)
+		return
+	}
+
+	// 验证数据是否存在
+	maps := make(map[string]interface{})
+	maps["user_id"] = userId
+	maps["invoice_addr_id"] = InvoiceAddrId
+
+	result := InvoiceAddrModel.Get(maps)
+	if len(result) <= 0 {
+		Response.FailWithMessage("非法数据", c)
+		return
+	}
+
+	// 开启事务
+	tx := mysql.Db.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+			tx.Rollback()
+		}
+	}()
+
+	Id, _ := strconv.ParseInt(InvoiceAddrId, 10, 64)
+
+	_ = InvoiceAddrModel.DeleteId(Id)
 
 	Response.Ok(c)
 }

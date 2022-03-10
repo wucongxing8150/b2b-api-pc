@@ -53,6 +53,12 @@ func Init() *gin.Engine {
 
 		// 新增邮寄地址
 		postGroup.POST("address", Invoice.AddAddr)
+
+		// 删除邮寄地址
+		postGroup.DELETE("address", Invoice.DeleteAddr)
+
+		// 邮寄地址设为默认
+		postGroup.PUT("defaultAddress", Invoice.DefaultAddr)
 	}
 
 	return r

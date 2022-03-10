@@ -1,19 +1,23 @@
 package InvoiceAddr
 
 import (
+	"fmt"
+	"time"
+
 	"b2b-api-pc/App/Cores/mysql"
 	"b2b-api-pc/App/Model"
-	"fmt"
 	"github.com/jinzhu/gorm"
-	"time"
 )
 
 type TableStruct struct {
 	*Model.InvoiceAddr // 结构体继承
 }
 
+// var Db = mysql.Init()
+
 func Get(maps interface{}) (table []TableStruct) {
-	mysql.Db.Model(&TableStruct{}).Where(maps).Find(&table)
+	Db := mysql.Init()
+	Db.Model(&TableStruct{}).Where(maps).Find(&table)
 	return
 }
 
@@ -30,16 +34,8 @@ func GetTotal(maps interface{}) (count int) {
 	return
 }
 
-// func Add(data Model.InvoiceAddr) (string, bool) {
-// 	if err := mysql.Db.Model(&TableStruct{}).Create(data).Error; err != nil {
-// 		fmt.Println("插入失败", err)
-// 		return err.Error(), false
-// 	}
-// 	return "", true
-// }
-
-func (i *TableStruct) Add(data map[string]interface{}) (string, bool) {
-	if err := mysql.Db.Model(&i).Create(data).Error; err != nil {
+func Add(data Model.InvoiceAddr) (string, bool) {
+	if err := mysql.Db.Model(&TableStruct{}).Create(&data).Error; err != nil {
 		fmt.Println("插入失败", err)
 		return err.Error(), false
 	}
@@ -58,6 +54,18 @@ func EditMap(maps interface{}, data interface{}) bool {
 
 func Edit(data Model.InvoiceAddr) bool {
 	mysql.Db.Model(&TableStruct{}).Updates(&data)
+	return true
+}
+
+// DeleteMap 条件删除
+func DeleteMap(maps interface{}) bool {
+	mysql.Db.Model(&TableStruct{}).Where(maps).Delete(&TableStruct{})
+	return true
+}
+
+// DeleteId 主键删除
+func DeleteId(id int64) bool {
+	mysql.Db.Model(&TableStruct{}).Delete(&TableStruct{}, id)
 	return true
 }
 
