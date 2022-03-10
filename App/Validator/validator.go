@@ -103,7 +103,7 @@ func Translate(err error) (errMsg string) {
 	return
 }
 
-//手机号验证
+//自定义手机号验证
 func mobile(fl validator.FieldLevel) bool {
 	return Tool.RegexpMobile(fl.Field().String())
 }

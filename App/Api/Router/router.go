@@ -50,6 +50,9 @@ func Init() *gin.Engine {
 
 		// 修改邮寄地址
 		postGroup.PUT("address", Invoice.UpdateAddr)
+
+		// 新增邮寄地址
+		postGroup.POST("address", Invoice.AddAddr)
 	}
 
 	return r
