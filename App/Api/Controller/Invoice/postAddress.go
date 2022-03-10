@@ -5,6 +5,7 @@ import (
 	Response "b2b-api-pc/App/Api/response"
 	InvoiceAddrModel "b2b-api-pc/App/Logic/InvoiceAddr"
 	"b2b-api-pc/App/Model"
+	"b2b-api-pc/App/Validator"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
@@ -32,7 +33,7 @@ func ListAddr(c *gin.Context) {
 	Response.OkWithData(result, c)
 }
 
-// UpdateAddr
+// UpdateAddr 邮寄地址修改
 func UpdateAddr(c *gin.Context) {
 	userId, _ := c.Get("user_id")
 
@@ -47,14 +48,10 @@ func UpdateAddr(c *gin.Context) {
 		return
 	}
 
-	//参数验证
-	//validate := validator.New()
-	//
-	//var stringTest string = ""
-	//err = validate.Var(stringTest, "required")
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
+	if err := Validator.Validate.Struct(invoiceAddr); err != nil {
+		Response.FailWithMessage(Validator.Translate(err), c)
+		return
+	}
 
 	//获取邮寄地址是否存在
 	maps := make(map[string]interface{})
