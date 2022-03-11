@@ -38,7 +38,9 @@ func ListAddr(c *gin.Context) {
 	Response.OkWithData(result, c)
 }
 
-// UpdateAddr 邮寄地址修改
+// UpdateAddr
+// @Description: 修改邮寄地址
+// @param c
 func UpdateAddr(c *gin.Context) {
 	userId, _ := c.Get("user_id")
 
@@ -80,6 +82,9 @@ func UpdateAddr(c *gin.Context) {
 	Response.Ok(c)
 }
 
+// AddAddr
+// @Description:新增邮寄地址
+// @param c
 func AddAddr(c *gin.Context) {
 	userId, _ := c.Get("user_id")
 
@@ -224,15 +229,34 @@ func DefaultAddr(c *gin.Context) {
 		return
 	}
 
+	Id, _ := strconv.ParseInt(InvoiceAddrId, 10, 64)
+
+	var invoiceAddr Model.InvoiceAddr
+
 	// 验证数据是否存在
 	maps := make(map[string]interface{})
 	maps["user_id"] = userId
-	maps["invoice_addr_id"] = InvoiceAddrId
 
-	result := InvoiceAddrModel.Get(maps)
+	result := InvoiceAddrModel.Search(maps)
 	if len(result) <= 0 {
 		Response.FailWithMessage("非法数据", c)
 		return
+	}
+
+	var IsDefaultId int64
+
+	for _, r := range result {
+		// 记录已存在默认数据
+		if r.IsDefault == 1 {
+			IsDefaultId = r.InvoiceAddrId
+		}
+
+		if r.InvoiceAddrId == Id {
+			if r.IsDefault == 1 {
+				Response.FailWithMessage("请勿重复设置", c)
+				return
+			}
+		}
 	}
 
 	// 开启事务
@@ -243,10 +267,35 @@ func DefaultAddr(c *gin.Context) {
 			tx.Rollback()
 		}
 	}()
+	if err := tx.Error; err != nil {
+		Response.FailWithMessage(err.Error(), c)
+		return
+	}
 
-	Id, _ := strconv.ParseInt(InvoiceAddrId, 10, 64)
+	// 修改原默认为非默认
+	if IsDefaultId != 0 {
+		fmt.Println("111")
+		data := make(map[string]interface{})
+		data["is_default"] = 0
+		data["invoice_addr_id"] = IsDefaultId
 
-	_ = InvoiceAddrModel.DeleteId(Id)
+		if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Update(data).Error; err != nil {
+			tx.Rollback()
+			Response.FailWithMessage("修改失败", c)
+			return
+		}
+	}
 
+	// 修改为默认
+	invoiceAddr.InvoiceAddrId = Id
+	invoiceAddr.IsDefault = 1
+
+	if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Update(&invoiceAddr).Error; err != nil {
+		tx.Rollback()
+		Response.FailWithMessage("修改失败", c)
+		return
+	}
+
+	tx.Commit()
 	Response.Ok(c)
 }

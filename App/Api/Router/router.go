@@ -40,25 +40,43 @@ func Init() *gin.Engine {
 	// 鉴权中间件
 	r.Use(Auth.VerifyAuth())
 
-	// 路由群组
+	// 发票
 	invoice := r.Group("/invoice")
-
-	postGroup := invoice.Group("/post")
 	{
-		// 邮寄地址列表
-		postGroup.GET("address", Invoice.ListAddr)
+		// 邮寄地址
+		postGroup := invoice.Group("/post")
+		{
+			// 邮寄地址列表
+			postGroup.GET("address", Invoice.ListAddr)
 
-		// 修改邮寄地址
-		postGroup.PUT("address", Invoice.UpdateAddr)
+			// 修改邮寄地址
+			postGroup.PUT("address", Invoice.UpdateAddr)
 
-		// 新增邮寄地址
-		postGroup.POST("address", Invoice.AddAddr)
+			// 新增邮寄地址
+			postGroup.POST("address", Invoice.AddAddr)
 
-		// 删除邮寄地址
-		postGroup.DELETE("address", Invoice.DeleteAddr)
+			// 删除邮寄地址
+			postGroup.DELETE("address", Invoice.DeleteAddr)
 
-		// 邮寄地址设为默认
-		postGroup.PUT("defaultAddress", Invoice.DefaultAddr)
+			// 邮寄地址设为默认
+			postGroup.PUT("defaultAddress", Invoice.DefaultAddr)
+		}
+
+		// 发票配置
+		sysGroup := invoice.Group("/sys")
+		{
+			// 发票配置列表
+			sysGroup.GET("list", Invoice.ListAddr)
+
+			// 发票配置详情
+			sysGroup.GET("detail", Invoice.ListAddr)
+
+			// 发票配置删除
+			sysGroup.DELETE("/", Invoice.UpdateAddr)
+
+			// 发票配置新增
+			sysGroup.POST("/", Invoice.AddAddr)
+		}
 	}
 
 	return r
