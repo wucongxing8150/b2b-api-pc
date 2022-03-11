@@ -66,7 +66,6 @@ func UpdateAddr(c *gin.Context) {
 	maps["invoice_addr_id"] = invoiceAddr.InvoiceAddrId
 	maps["user_id"] = userId
 	result := InvoiceAddrModel.Get(maps)
-	fmt.Println(result)
 	if len(result) <= 0 {
 		Response.FailWithMessage("用户数据错误", c)
 		return

@@ -66,16 +66,16 @@ func Init() *gin.Engine {
 		sysGroup := invoice.Group("/sys")
 		{
 			// 发票配置列表
-			sysGroup.GET("list", Invoice.ListAddr)
+			sysGroup.GET("list", Invoice.ListSys)
 
 			// 发票配置详情
-			sysGroup.GET("detail", Invoice.ListAddr)
+			sysGroup.GET("detail", Invoice.DetailSys)
 
 			// 发票配置删除
-			sysGroup.DELETE("/", Invoice.UpdateAddr)
+			sysGroup.DELETE("/", Invoice.DeleteSys)
 
 			// 发票配置新增
-			sysGroup.POST("/", Invoice.AddAddr)
+			sysGroup.POST("/", Invoice.AddSys)
 		}
 	}
 

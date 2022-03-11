@@ -26,9 +26,9 @@ func (t *LocalTime) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 	var err error
-	//前端接收的时间字符串
+	// 前端接收的时间字符串
 	str := string(data)
-	//去除接收的str收尾多余的"
+	// 去除接收的str收尾多余的"
 	timeStr := strings.Trim(str, "\"")
 	t1, err := time.Parse("2006-01-02 15:04:05", timeStr)
 	*t = LocalTime(t1)
