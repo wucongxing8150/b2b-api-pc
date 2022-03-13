@@ -220,3 +220,80 @@ func AddSys(c *gin.Context) {
 
 	Response.Ok(c)
 }
+
+// UpdateSys
+// @Description: 修改发票配置
+// @param c
+func UpdateSys(c *gin.Context) {
+	userId, _ := c.Get("user_id")
+
+	if userId == "" {
+		Response.FailWithMessage("缺少参数", c)
+		return
+	}
+
+	var InvoiceInfo Model.InvoiceInfo
+	if err := c.ShouldBindJSON(&InvoiceInfo); err != nil {
+		Response.FailWithMessage(fmt.Sprint(err), c)
+		return
+	}
+
+	// 参数验证
+	if err := Validator.Validate.Struct(InvoiceInfo); err != nil {
+		Response.FailWithMessage(Validator.Translate(err), c)
+		return
+	}
+
+	// 查询是否存在
+	maps := make(map[string]interface{})
+	maps["invoice_info_id"] = InvoiceInfo.InvoiceInfoId
+	maps["user_id"] = userId
+	result := InvoiceInfoModel.Get(maps)
+	if len(result) <= 0 {
+		Response.FailWithMessage("非法请求", c)
+		return
+	}
+
+	// 不允许修改信息类型
+	if result[0].InfoType != InvoiceInfo.InfoType {
+		Response.FailWithMessage("非法修改", c)
+		return
+	}
+
+	// 不允许修改发票类型
+	if result[0].InfoInvoiceType != InvoiceInfo.InfoInvoiceType {
+		Response.FailWithMessage("非法修改", c)
+		return
+	}
+
+	// 不允许修改发票抬头类型
+	if result[0].HeaderType != InvoiceInfo.HeaderType {
+		Response.FailWithMessage("非法修改", c)
+		return
+	}
+
+	// 查询是否重复
+	maps = make(map[string]interface{})
+	maps["user_id"] = userId
+	maps["info_type"] = 2
+	maps["info_invoice_type"] = InvoiceInfo.InfoInvoiceType
+	maps["header_name"] = InvoiceInfo.HeaderName
+	maps["invoice_code"] = InvoiceInfo.InvoiceCode
+
+	repeat := InvoiceInfoModel.Get(maps)
+	if len(repeat) > 0 {
+		Response.FailWithMessage("已存在相同数据，请勿重复提交", c)
+		return
+	}
+
+	InvoiceInfo.UserId = userId.(string)
+	InvoiceInfo.InfoType = 2
+
+	// 修改
+	res := InvoiceInfoModel.Edit(InvoiceInfo)
+	if res == false {
+		Response.FailWithMessage("修改失败", c)
+		return
+	}
+	Response.Ok(c)
+}

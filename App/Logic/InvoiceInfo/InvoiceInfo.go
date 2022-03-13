@@ -58,7 +58,7 @@ func EditMap(maps interface{}, data interface{}) bool {
 	return true
 }
 
-func Edit(data Model.InvoiceAddr) bool {
+func Edit(data Model.InvoiceInfo) bool {
 	mysql.Db.Model(&TableStruct{}).Updates(&data)
 	return true
 }
@@ -97,10 +97,10 @@ func (i *TableStruct) BeforeCreate(scope *gorm.Scope) error {
 	return nil
 }
 
-func (i *TableStruct) BeforeUpdate(scope *gorm.Scope) (err error) {
-	err = scope.SetColumn("UpdateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-	return nil
-}
+// func (i *TableStruct) BeforeUpdate(scope *gorm.Scope) (err error) {
+// 	err = scope.SetColumn("UpdateTime", time.Now())
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	return nil
+// }

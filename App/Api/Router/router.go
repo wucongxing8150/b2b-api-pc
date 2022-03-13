@@ -76,6 +76,25 @@ func Init() *gin.Engine {
 
 			// 发票配置新增
 			sysGroup.POST("/", Invoice.AddSys)
+
+			// 发票配置修改
+			sysGroup.PUT("/", Invoice.UpdateSys)
+		}
+
+		// 发票邮箱
+		emailGroup := invoice.Group("/email")
+		{
+			// 发票邮箱列表
+			emailGroup.GET("list", Invoice.ListEmail)
+
+			// 发票邮箱删除
+			emailGroup.DELETE("/", Invoice.DeleteEmail)
+
+			// 发票邮箱新增
+			emailGroup.POST("/", Invoice.AddEmail)
+
+			// 发票邮箱修改
+			emailGroup.PUT("/", Invoice.UpdateEmail)
 		}
 	}
 

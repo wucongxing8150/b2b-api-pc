@@ -273,7 +273,6 @@ func DefaultAddr(c *gin.Context) {
 
 	// 修改原默认为非默认
 	if IsDefaultId != 0 {
-		fmt.Println("111")
 		data := make(map[string]interface{})
 		data["is_default"] = 0
 		data["invoice_addr_id"] = IsDefaultId
