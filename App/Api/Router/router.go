@@ -96,6 +96,14 @@ func Init() *gin.Engine {
 			// 发票邮箱修改
 			emailGroup.PUT("/", Invoice.UpdateEmail)
 		}
+
+		// 申请开具发票
+		applyGroup := invoice.Group("/invoice")
+		{
+			// 申请开具发票
+			applyGroup.POST("apply", Invoice.ApplyInvoice)
+		}
+
 	}
 
 	return r
