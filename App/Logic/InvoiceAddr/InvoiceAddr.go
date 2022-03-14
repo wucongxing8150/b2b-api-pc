@@ -6,7 +6,7 @@ import (
 
 	"b2b-api-pc/App/Cores/mysql"
 	"b2b-api-pc/App/Model"
-	"github.com/jinzhu/gorm"
+	"gorm.io/gorm"
 )
 
 type TableStruct struct {
@@ -29,7 +29,7 @@ func SearchPage(pageNum int, pageSize int, maps interface{}) (table []TableStruc
 	mysql.Db.Model(&TableStruct{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
 	return
 }
-func GetTotal(maps interface{}) (count int) {
+func GetTotal(maps interface{}) (count int64) {
 	mysql.Db.Model(&TableStruct{}).Where(maps).Count(&count)
 	return
 }
@@ -69,7 +69,7 @@ func DeleteId(id int64) bool {
 	return true
 }
 
-func (i *TableStruct) BeforeCreate(scope *gorm.Scope) error {
+func (i *TableStruct) BeforeCreate(tx *gorm.DB) (err error) {
 	// ID, err := Tool.NewWorker(1)
 	// if err != nil {
 	// 	panic(err)
@@ -78,23 +78,13 @@ func (i *TableStruct) BeforeCreate(scope *gorm.Scope) error {
 	// if err != nil {
 	// 	panic(err)
 	// }
+	i.CreateTime = Model.LocalTime(time.Now())
+	i.UpdateTime = Model.LocalTime(time.Now())
 
-	err := scope.SetColumn("CreateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-
-	err = scope.SetColumn("UpdateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-	return nil
+	return
 }
 
-func (i *TableStruct) BeforeUpdate(scope *gorm.Scope) (err error) {
-	err = scope.SetColumn("UpdateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-	return nil
+func (i *TableStruct) BeforeUpdate(tx *gorm.DB) (err error) {
+	i.UpdateTime = Model.LocalTime(time.Now())
+	return
 }

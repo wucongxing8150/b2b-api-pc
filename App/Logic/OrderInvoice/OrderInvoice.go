@@ -1,8 +1,7 @@
-package InvoiceInfo
+package OrderInvoice
 
 import (
 	"fmt"
-	"time"
 
 	"b2b-api-pc/App/Cores/mysql"
 	"b2b-api-pc/App/Model"
@@ -10,7 +9,7 @@ import (
 )
 
 type TableStruct struct {
-	*Model.InvoiceInfo // 结构体继承
+	*Model.OrderInvoice // 结构体继承
 }
 
 // var Db = mysql.Init()
@@ -40,8 +39,16 @@ func GetTotal(maps interface{}) (count int64) {
 	return
 }
 
-func Add(data Model.InvoiceInfo) (string, bool) {
+func Add(data Model.OrderInvoice) (string, bool) {
 	if err := mysql.Db.Model(&TableStruct{}).Create(&data).Error; err != nil {
+		fmt.Println("插入失败", err)
+		return err.Error(), false
+	}
+	return "", true
+}
+
+func AddMap(tx *gorm.DB, data interface{}) (string, bool) {
+	if err := tx.Model(&TableStruct{}).Create(&data).Error; err != nil {
 		fmt.Println("插入失败", err)
 		return err.Error(), false
 	}
@@ -58,7 +65,7 @@ func EditMap(maps interface{}, data interface{}) bool {
 	return true
 }
 
-func Edit(data Model.InvoiceInfo) bool {
+func Edit(data Model.OrderInvoice) bool {
 	mysql.Db.Model(&TableStruct{}).Updates(&data)
 	return true
 }
@@ -73,19 +80,4 @@ func DeleteMap(maps interface{}) bool {
 func DeleteId(id int64) bool {
 	mysql.Db.Model(&TableStruct{}).Delete(&TableStruct{}, id)
 	return true
-}
-
-func (i *TableStruct) BeforeCreate(tx *gorm.DB) (err error) {
-	// ID, err := Tool.NewWorker(1)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// err = scope.SetColumn("InvoiceAddrId", ID.GetId())
-	// if err != nil {
-	// 	panic(err)
-	// }
-	i.ApplyTime = Model.LocalTime(time.Now())
-	i.VerifyTime = Model.LocalTime(time.Now())
-
-	return
 }

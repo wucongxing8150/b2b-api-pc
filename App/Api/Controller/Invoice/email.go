@@ -1,16 +1,17 @@
 package Invoice
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
 	InvoiceEmailModel "b2b-api-pc/App/Logic/InvoiceEmail"
 	"b2b-api-pc/App/Model"
 	"b2b-api-pc/App/Validator"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
-	"strconv"
-	"time"
 )
 
 // ListEmail List
@@ -216,7 +217,7 @@ func UpdateEmail(c *gin.Context) {
 		data["is_default"] = "0"
 		data["invoice_email_id"] = repeat[0].InvoiceEmailId
 
-		if err := tx.Model(&InvoiceEmailModel.TableStruct{}).Update(data).Error; err != nil {
+		if err := tx.Model(&InvoiceEmailModel.TableStruct{}).Updates(data).Error; err != nil {
 			tx.Rollback()
 			Response.FailWithMessage("修改失败", c)
 			return
@@ -246,7 +247,7 @@ func UpdateEmail(c *gin.Context) {
 	data["email"] = InvoiceEmail.Email
 	data["tel"] = InvoiceEmail.Tel
 
-	if err := tx.Model(&InvoiceEmailModel.TableStruct{}).Update(data).Error; err != nil {
+	if err := tx.Model(&InvoiceEmailModel.TableStruct{}).Updates(data).Error; err != nil {
 		tx.Rollback()
 		Response.FailWithMessage("修改失败", c)
 		return

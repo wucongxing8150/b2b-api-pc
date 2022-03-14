@@ -1,20 +1,23 @@
 package Invoice
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
 	InvoiceInfoModel "b2b-api-pc/App/Logic/InvoiceInfo"
 	InvoiceItemModel "b2b-api-pc/App/Logic/InvoiceItem"
+	"b2b-api-pc/App/Model"
 	"b2b-api-pc/App/Validator"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"strings"
 )
 
 type Apply struct {
 	OrderNumber           string `json:"order_number" validate:"required" label:"订单号"`
-	InvoiceType           string `json:"invoice_type" validate:"required" label:"invoice_type"`
-	HeaderType            string `json:"header_type" validate:"required" label:"header_type"`
+	InvoiceType           int    `json:"invoice_type" validate:"required" label:"invoice_type"`
+	HeaderType            int    `json:"header_type" validate:"required" label:"header_type"`
 	HeaderName            string `json:"header_name" validate:"required" label:"header_name"`
 	InvoiceCode           string `json:"invoice_code" validate:"required" label:"invoice_code"`
 	InvoiceBank           string `json:"invoice_bank" validate:"required" label:"invoice_bank"`
@@ -47,8 +50,8 @@ func ApplyInvoice(c *gin.Context) {
 	}
 
 	// 检测用户是否可申请此种类型发票
-	if ApplyStruct.InvoiceType == "2" {
-		if ApplyStruct.HeaderType == "2" {
+	if ApplyStruct.InvoiceType == 2 {
+		if ApplyStruct.HeaderType == 2 {
 			Response.FailWithMessage("错误请求，增值税发票只允许商家抬头", c)
 			return
 		}
@@ -75,14 +78,14 @@ func ApplyInvoice(c *gin.Context) {
 
 	// 检测订单号是否存在
 	for _, v := range orderNumber {
-		// maps := make(map[string]interface{})
-		// maps["user_id"] = userId
-		// maps["order_number"] = v
-		// result := OrderModel.Get(maps)
-		// if len(result) <= 0 {
-		// 	Response.FailWithMessage("存在非法订单", c)
-		// 	return
-		// }
+		maps := make(map[string]interface{})
+		maps["user_id"] = userId
+		maps["order_number"] = v
+		order := OrderModel.Get(maps)
+		if len(order) <= 0 {
+			Response.FailWithMessage("存在非法订单", c)
+			return
+		}
 
 		// 检测订单是否已申请开具过
 		maps := make(map[string]interface{})
@@ -105,17 +108,87 @@ func ApplyInvoice(c *gin.Context) {
 		}
 	}()
 	if err := tx.Error; err != nil {
+		tx.Rollback()
 		Response.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	// 添加申请表
-	// invoice := &Model.Invoice{
-	// 	UserId: userId.(string),
-	// 	city:   "北京",
-	// 	age:    18,
-	// }
-	// 添加申请明细表
-	// 添加订单发票表（tz_order_invoice）
+	invoice := &Model.Invoice{
+		UserId:                userId.(string),
+		ApplyType:             2,
+		InvoiceType:           ApplyStruct.InvoiceType,
+		HeaderType:            ApplyStruct.HeaderType,
+		HeaderName:            ApplyStruct.HeaderName,
+		InvoiceCode:           ApplyStruct.InvoiceCode,
+		InvoiceBank:           ApplyStruct.InvoiceBank,
+		InvoiceBranchBank:     ApplyStruct.InvoiceBranchBank,
+		InvoiceCompanyTel:     ApplyStruct.InvoiceCompanyTel,
+		InvoiceCompanyAddress: ApplyStruct.InvoiceCompanyAddress,
+		InvoiceBankAccount:    ApplyStruct.InvoiceBankAccount,
+		InvoiceContent:        ApplyStruct.InvoiceContent,
+		ApplyTime:             Model.LocalTime(time.Now()),
+	}
 
+	if err := tx.Create(&invoice).Error; err != nil {
+		tx.Rollback()
+		Response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	// 添加申请明细表
+
+	// for _, v := range orderNumber {
+	//
+	// 	data := make(map[string]interface{})
+	// 	data["invoice_id"] = invoice.InvoiceId
+	// 	data["order_number"] = v
+	//
+	// 	if err := tx.Model(&Model.InvoiceItem{}).Create(data).Error; err != nil {
+	// 		tx.Rollback()
+	// 		Response.FailWithMessage(err.Error(), c)
+	// 		return
+	// 	}
+	// }
+	//
+	// fmt.Println(dataSlice)
+
+	var InvoiceItems []Model.InvoiceItem
+
+	for _, v := range orderNumber {
+		var InvoiceItem = Model.InvoiceItem{
+			InvoiceId:   invoice.InvoiceId,
+			OrderNumber: v,
+		}
+		InvoiceItems = append(InvoiceItems, InvoiceItem)
+	}
+
+	if err := tx.Create(&InvoiceItems).Error; err != nil {
+		tx.Rollback()
+		Response.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	// 添加订单发票表（tz_order_invoice）
+	for _, v := range orderNumber {
+		orderInvoice := &Model.OrderInvoice{
+			OrderNumber:      v,
+			ShopId:           0,
+			InvoiceType:      0,
+			HeaderType:       0,
+			HeaderName:       "",
+			InvoiceTaxNumber: "",
+			InvoiceContext:   0,
+			InvoiceState:     0,
+			FileId:           0,
+			ApplicationTime:  Model.LocalTime{},
+			UploadTime:       Model.LocalTime{},
+		}
+	}
+
+	if err := tx.Create(&invoice).Error; err != nil {
+		tx.Rollback()
+		Response.FailWithMessage(err.Error(), c)
+		return
+	}
 }

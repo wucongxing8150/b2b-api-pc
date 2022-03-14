@@ -277,7 +277,7 @@ func DefaultAddr(c *gin.Context) {
 		data["is_default"] = 0
 		data["invoice_addr_id"] = IsDefaultId
 
-		if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Update(data).Error; err != nil {
+		if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Updates(data).Error; err != nil {
 			tx.Rollback()
 			Response.FailWithMessage("修改失败", c)
 			return
@@ -288,7 +288,7 @@ func DefaultAddr(c *gin.Context) {
 	invoiceAddr.InvoiceAddrId = Id
 	invoiceAddr.IsDefault = 1
 
-	if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Update(&invoiceAddr).Error; err != nil {
+	if err := tx.Model(&InvoiceAddrModel.TableStruct{}).Updates(&invoiceAddr).Error; err != nil {
 		tx.Rollback()
 		Response.FailWithMessage("修改失败", c)
 		return

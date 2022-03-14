@@ -8,10 +8,11 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
 	"reflect"
 	"strings"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type BaseModel struct {

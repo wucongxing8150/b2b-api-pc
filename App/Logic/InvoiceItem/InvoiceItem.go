@@ -1,9 +1,11 @@
 package InvoiceItem
 
 import (
+	"fmt"
+
 	"b2b-api-pc/App/Cores/mysql"
 	"b2b-api-pc/App/Model"
-	"fmt"
+	"gorm.io/gorm"
 )
 
 type TableStruct struct {
@@ -32,13 +34,21 @@ func SearchPage(pageNum int, pageSize int, maps interface{}) (table []TableStruc
 	mysql.Db.Model(&TableStruct{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
 	return
 }
-func GetTotal(maps interface{}) (count int) {
+func GetTotal(maps interface{}) (count int64) {
 	mysql.Db.Model(&TableStruct{}).Where(maps).Count(&count)
 	return
 }
 
 func Add(data Model.InvoiceItem) (string, bool) {
 	if err := mysql.Db.Model(&TableStruct{}).Create(&data).Error; err != nil {
+		fmt.Println("插入失败", err)
+		return err.Error(), false
+	}
+	return "", true
+}
+
+func AddMap(tx *gorm.DB, data interface{}) (string, bool) {
+	if err := tx.Model(&TableStruct{}).Create(&data).Error; err != nil {
 		fmt.Println("插入失败", err)
 		return err.Error(), false
 	}
