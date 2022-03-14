@@ -1,12 +1,9 @@
 package Order
 
 import (
-	"fmt"
-	"time"
-
 	"b2b-api-pc/App/Cores/mysql"
 	"b2b-api-pc/App/Model"
-	"github.com/jinzhu/gorm"
+	"fmt"
 )
 
 type TableStruct struct {
@@ -35,9 +32,19 @@ func SearchPage(pageNum int, pageSize int, maps interface{}) (table []TableStruc
 	mysql.Db.Model(&TableStruct{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
 	return
 }
-func GetTotal(maps interface{}) (count int) {
+func GetTotal(maps interface{}) (count int64) {
 	mysql.Db.Model(&TableStruct{}).Where(maps).Count(&count)
 	return
+}
+func GetWhere(maps interface{}) (table []TableStruct) {
+	db, err := Model.BuildWhere(mysql.Init(), maps)
+	if err != nil {
+		fmt.Println("查询失败", err)
+		return nil
+	}
+
+	db.Model(&TableStruct{}).Find(&table)
+	return table
 }
 
 func Add(data Model.Order) (string, bool) {
@@ -74,33 +81,3 @@ func DeleteId(id int64) bool {
 	mysql.Db.Model(&TableStruct{}).Delete(&TableStruct{}, id)
 	return true
 }
-
-func (i *TableStruct) BeforeCreate(scope *gorm.Scope) error {
-	// ID, err := Tool.NewWorker(1)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// err = scope.SetColumn("InvoiceAddrId", ID.GetId())
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	err := scope.SetColumn("UpdateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-
-	err = scope.SetColumn("UpdateTime", time.Now())
-	if err != nil {
-		panic(err)
-	}
-	return nil
-}
-
-// func (i *TableStruct) BeforeUpdate(scope *gorm.Scope) (err error) {
-// 	err = scope.SetColumn("UpdateTime", time.Now())
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	return nil
-// }

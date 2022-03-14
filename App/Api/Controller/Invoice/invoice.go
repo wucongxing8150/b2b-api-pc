@@ -1,6 +1,7 @@
 package Invoice
 
 import (
+	OrderModel "b2b-api-pc/App/Logic/Order"
 	"fmt"
 	"strings"
 	"time"
@@ -78,15 +79,6 @@ func ApplyInvoice(c *gin.Context) {
 
 	// 检测订单号是否存在
 	for _, v := range orderNumber {
-		maps := make(map[string]interface{})
-		maps["user_id"] = userId
-		maps["order_number"] = v
-		order := OrderModel.Get(maps)
-		if len(order) <= 0 {
-			Response.FailWithMessage("存在非法订单", c)
-			return
-		}
-
 		// 检测订单是否已申请开具过
 		maps := make(map[string]interface{})
 		maps["order_number"] = v
@@ -96,6 +88,30 @@ func ApplyInvoice(c *gin.Context) {
 			return
 		}
 	}
+
+	// 检测是否为同一店铺id
+	where := []interface{}{
+		[]interface{}{"user_id", "=", userId},
+		[]interface{}{"order_number", "in", orderNumber},
+	}
+	orders := OrderModel.GetWhere(where)
+	if len(orders) <= 0 {
+		Response.FailWithMessage("订单数据错误", c)
+		return
+	}
+
+	for k, v := range orders {
+		if k == 0 {
+			continue
+		}
+
+		if v.ShopId != orders[k-1].ShopId {
+			Response.FailWithMessage("请选择同一店铺订单", c)
+			return
+		}
+	}
+
+	fmt.Println(orders)
 
 	// 检测订单状态是否符合开具要求
 
@@ -171,19 +187,30 @@ func ApplyInvoice(c *gin.Context) {
 
 	// 添加订单发票表（tz_order_invoice）
 	for _, v := range orderNumber {
-		orderInvoice := &Model.OrderInvoice{
-			OrderNumber:      v,
-			ShopId:           0,
-			InvoiceType:      0,
-			HeaderType:       0,
-			HeaderName:       "",
-			InvoiceTaxNumber: "",
-			InvoiceContext:   0,
-			InvoiceState:     0,
-			FileId:           0,
-			ApplicationTime:  Model.LocalTime{},
-			UploadTime:       Model.LocalTime{},
+		maps := make(map[string]interface{})
+		maps["user_id"] = userId
+		maps["order_number"] = v
+		order := OrderModel.Get(maps)
+		if len(order) <= 0 {
+			Response.FailWithMessage("存在非法订单", c)
+			return
 		}
+
+		// shopId := order[0].ShopId
+		//
+		// orderInvoice := &Model.OrderInvoice{
+		// 	OrderNumber:      v,
+		// 	ShopId:           order,
+		// 	InvoiceType:      0,
+		// 	HeaderType:       0,
+		// 	HeaderName:       "",
+		// 	InvoiceTaxNumber: "",
+		// 	InvoiceContext:   0,
+		// 	InvoiceState:     0,
+		// 	FileId:           0,
+		// 	ApplicationTime:  Model.LocalTime{},
+		// 	UploadTime:       Model.LocalTime{},
+		// }
 	}
 
 	if err := tx.Create(&invoice).Error; err != nil {

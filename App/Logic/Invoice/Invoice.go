@@ -26,7 +26,7 @@ func SearchPage(pageNum int, pageSize int, maps interface{}) (table []TableStruc
 	mysql.Db.Model(&TableStruct{}).Where(maps).Offset(pageNum).Limit(pageSize).Find(&table)
 	return
 }
-func GetTotal(maps interface{}) (count int) {
+func GetTotal(maps interface{}) (count int64) {
 	mysql.Db.Model(&TableStruct{}).Where(maps).Count(&count)
 	return
 }
