@@ -112,8 +112,6 @@ func ApplyInvoice(c *gin.Context) {
 		}
 	}
 
-	fmt.Println(orders)
-
 	// 检测订单状态是否符合开具要求
 
 	// 开启事务
