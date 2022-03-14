@@ -1,10 +1,11 @@
 package Invoice
 
 import (
-	OrderModel "b2b-api-pc/App/Logic/Order"
 	"fmt"
 	"strings"
 	"time"
+
+	OrderModel "b2b-api-pc/App/Logic/Order"
 
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
@@ -153,22 +154,6 @@ func ApplyInvoice(c *gin.Context) {
 	}
 
 	// 添加申请明细表
-
-	// for _, v := range orderNumber {
-	//
-	// 	data := make(map[string]interface{})
-	// 	data["invoice_id"] = invoice.InvoiceId
-	// 	data["order_number"] = v
-	//
-	// 	if err := tx.Model(&Model.InvoiceItem{}).Create(data).Error; err != nil {
-	// 		tx.Rollback()
-	// 		Response.FailWithMessage(err.Error(), c)
-	// 		return
-	// 	}
-	// }
-	//
-	// fmt.Println(dataSlice)
-
 	var InvoiceItems []Model.InvoiceItem
 
 	for _, v := range orderNumber {
@@ -196,26 +181,25 @@ func ApplyInvoice(c *gin.Context) {
 			return
 		}
 
-		// shopId := order[0].ShopId
-		//
-		// orderInvoice := &Model.OrderInvoice{
-		// 	OrderNumber:      v,
-		// 	ShopId:           order,
-		// 	InvoiceType:      0,
-		// 	HeaderType:       0,
-		// 	HeaderName:       "",
-		// 	InvoiceTaxNumber: "",
-		// 	InvoiceContext:   0,
-		// 	InvoiceState:     0,
-		// 	FileId:           0,
-		// 	ApplicationTime:  Model.LocalTime{},
-		// 	UploadTime:       Model.LocalTime{},
-		// }
-	}
+		orderInvoice := &Model.OrderInvoice{
+			OrderNumber:      v,
+			ShopId:           order[0].OrderId,
+			InvoiceType:      ApplyStruct.InvoiceType,
+			HeaderType:       ApplyStruct.HeaderType,
+			HeaderName:       ApplyStruct.HeaderName,
+			InvoiceTaxNumber: ApplyStruct.InvoiceCode,
+			InvoiceContext:   1,
+			InvoiceState:     1,
+			ApplicationTime:  Model.LocalTime(time.Now()),
+			UploadTime:       Model.LocalTime(time.Now()),
+		}
 
-	if err := tx.Create(&invoice).Error; err != nil {
-		tx.Rollback()
-		Response.FailWithMessage(err.Error(), c)
-		return
+		if err := tx.Create(&orderInvoice).Error; err != nil {
+			tx.Rollback()
+			Response.FailWithMessage(err.Error(), c)
+			return
+		}
 	}
+	tx.Commit()
+	Response.Ok(c)
 }
