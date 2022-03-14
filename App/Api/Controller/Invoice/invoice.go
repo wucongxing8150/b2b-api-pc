@@ -2,10 +2,13 @@ package Invoice
 
 import (
 	Response "b2b-api-pc/App/Api/response"
+	"b2b-api-pc/App/Cores/mysql"
 	InvoiceInfoModel "b2b-api-pc/App/Logic/InvoiceInfo"
+	InvoiceItemModel "b2b-api-pc/App/Logic/InvoiceItem"
 	"b2b-api-pc/App/Validator"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"strings"
 )
 
 type Apply struct {
@@ -44,19 +47,74 @@ func ApplyInvoice(c *gin.Context) {
 	}
 
 	// 检测用户是否可申请此种类型发票
-	maps := make(map[string]interface{})
-	maps["user_id"] = userId
+	if ApplyStruct.InvoiceType == "2" {
+		if ApplyStruct.HeaderType == "2" {
+			Response.FailWithMessage("错误请求，增值税发票只允许商家抬头", c)
+			return
+		}
 
-	result := InvoiceInfoModel.Get(maps)
-	if len(result) <= 0 {
-		Response.FailWithMessage("非法请求", c)
+		maps := make(map[string]interface{})
+		maps["user_id"] = userId
+		maps["info_type"] = 2
+		maps["info_invoice_type"] = 2
+		maps["header_type"] = 1
+
+		result := InvoiceInfoModel.Get(maps)
+		if len(result) <= 0 {
+			Response.FailWithMessage("请提前申请开具增值税发票资格", c)
+			return
+		}
+	}
+
+	// 分割订单号
+	orderNumber := strings.Split(ApplyStruct.OrderNumber, ",")
+	if len(orderNumber) <= 0 {
+		Response.FailWithMessage("订单号错误", c)
 		return
 	}
 
 	// 检测订单号是否存在
+	for _, v := range orderNumber {
+		// maps := make(map[string]interface{})
+		// maps["user_id"] = userId
+		// maps["order_number"] = v
+		// result := OrderModel.Get(maps)
+		// if len(result) <= 0 {
+		// 	Response.FailWithMessage("存在非法订单", c)
+		// 	return
+		// }
+
+		// 检测订单是否已申请开具过
+		maps := make(map[string]interface{})
+		maps["order_number"] = v
+		invoiceItem := InvoiceItemModel.Get(maps)
+		if len(invoiceItem) > 0 {
+			Response.FailWithMessage("存在已开具发票订单，请勿重复申请", c)
+			return
+		}
+	}
+
 	// 检测订单状态是否符合开具要求
-	// 检测订单是否已申请开具过
+
+	// 开启事务
+	tx := mysql.Db.Begin()
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println(err)
+			tx.Rollback()
+		}
+	}()
+	if err := tx.Error; err != nil {
+		Response.FailWithMessage(err.Error(), c)
+		return
+	}
+
 	// 添加申请表
+	// invoice := &Model.Invoice{
+	// 	UserId: userId.(string),
+	// 	city:   "北京",
+	// 	age:    18,
+	// }
 	// 添加申请明细表
 	// 添加订单发票表（tz_order_invoice）
 
