@@ -10,7 +10,6 @@ import (
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
 	InvoiceInfoModel "b2b-api-pc/App/Logic/InvoiceInfo"
-	InvoiceItemModel "b2b-api-pc/App/Logic/InvoiceItem"
 	"b2b-api-pc/App/Model"
 	"b2b-api-pc/App/Validator"
 	"github.com/gin-gonic/gin"
@@ -79,16 +78,16 @@ func ApplyInvoice(c *gin.Context) {
 	}
 
 	// 检测订单号是否存在
-	for _, v := range orderNumber {
-		// 检测订单是否已申请开具过
-		maps := make(map[string]interface{})
-		maps["order_number"] = v
-		invoiceItem := InvoiceItemModel.Get(maps)
-		if len(invoiceItem) > 0 {
-			Response.FailWithMessage("存在已开具发票订单，请勿重复申请", c)
-			return
-		}
-	}
+	// for _, v := range orderNumber {
+	// 	// 检测订单是否已申请开具过
+	// 	maps := make(map[string]interface{})
+	// 	maps["order_number"] = v
+	// 	invoiceItem := InvoiceItemModel.Get(maps)
+	// 	if len(invoiceItem) > 0 {
+	// 		Response.FailWithMessage("存在已开具发票订单，请勿重复申请", c)
+	// 		return
+	// 	}
+	// }
 
 	// 检测是否为同一店铺id
 	where := []interface{}{

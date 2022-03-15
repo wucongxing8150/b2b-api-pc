@@ -104,7 +104,7 @@ func Init() *gin.Engine {
 			applyGroup.POST("apply", Invoice.ApplyInvoice)
 		}
 
-		// 申请开具发票
+		// 可开发票列表
 		orderGroup := invoice.Group("/order")
 		{
 			// 可开发票列表
