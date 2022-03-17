@@ -10,7 +10,9 @@ import (
 
 	Response "b2b-api-pc/App/Api/response"
 	"b2b-api-pc/App/Cores/mysql"
+	AttachFileModel "b2b-api-pc/App/Logic/AttachFile"
 	"b2b-api-pc/App/Model"
+	ServiceOrder "b2b-api-pc/App/Service/order"
 	"b2b-api-pc/App/Tool"
 	"b2b-api-pc/App/Validator"
 	"github.com/gin-gonic/gin"
@@ -121,7 +123,9 @@ func ListOrder(c *gin.Context) {
 	var orderModel []*Model.Order
 	var order Model.Order
 
-	db, err := Model.BuildQueryList(mysql.Db, wheres, []string{"order_id,shop_id,order_number"}, "pay_time desc", pageInt, pageSizeInt)
+	db, err := Model.BuildQueryList(mysql.Db, wheres, []string{"order_id,shop_id,order_number,actual_total,status"},
+		"pay_time desc",
+		pageInt, pageSizeInt)
 	if err != nil {
 		fmt.Println("查询失败", err)
 		Response.FailWithMessage("查询失败", c)
@@ -137,18 +141,51 @@ func ListOrder(c *gin.Context) {
 		return
 	}
 
-	var dataArray map[string]interface{}
+	var dataArray []map[string]interface{}
 
 	// 处理数据
-	if len(orderModel) >= 0 {
-		for k, v := range orderModel {
-			dataArray["order_id"] = v.OrderId
-			dataArray["shop_id"] = v.ShopId
-			dataArray["shop_name"] = ""
+	if len(orderModel) > 0 {
+		for _, v := range orderModel {
+			data := make(map[string]interface{})
+
+			data["order_id"] = v.OrderId
+			data["shop_id"] = v.ShopId
+			data["shop_name"] = ""
 			if v.ShopDetail.ShopName != "" {
-				dataArray["shop_name"] = v.ShopDetail.ShopName
+				data["shop_name"] = v.ShopDetail.ShopName
 			}
-			dataArray["shop_id"] = v.ShopId
+			data["order_number"] = v.OrderNumber
+			data["invoice_state"] = v.OrderInvoice.InvoiceState
+			data["actual_total"] = v.ActualTotal
+			data["status"] = ServiceOrder.StatusToZh(v.Status)
+			data["invoice_type"] = v.OrderInvoice.InvoiceType
+
+			// 商品数据
+			var prodArray []map[string]interface{}
+			for _, v2 := range v.OrderItem {
+				prod := make(map[string]interface{})
+				prod["prod_id"] = v2.ProdId
+				prod["sku_id"] = v2.SkuId
+				prod["prod_name"] = v2.ProdName
+				prod["prod_count"] = v2.ProdCount
+				prod["sku_name"] = v2.SkuName
+				prod["pic"] = v2.Pic
+				prodArray = append(prodArray, prod)
+			}
+			data["prod"] = prodArray
+			data["file_path"] = ""
+
+			// 发票地址
+			if v.OrderInvoice.FileId != 0 {
+				maps := make(map[string]interface{})
+				maps["file_id"] = v.OrderInvoice.FileId
+
+				repeat := AttachFileModel.Get(maps)
+				if len(repeat) > 0 {
+					data["file_path"] = repeat[0].FilePath
+				}
+			}
+			dataArray = append(dataArray, data)
 		}
 	}
 
@@ -156,7 +193,7 @@ func ListOrder(c *gin.Context) {
 	db.Model(&order).Count(&total)
 
 	data := map[string]interface{}{
-		"dataArray": &orderModel,
+		"dataArray": dataArray,
 		"page":      pageInt,
 		"pageSize":  pageSizeInt,
 		"total":     total,
